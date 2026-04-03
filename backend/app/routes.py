@@ -12,7 +12,7 @@ from app.schemas import (
     StockHoldingCreate, MFHoldingCreate, HoldingUpdate, HoldingOut,
     SnapshotOut, SnapshotDetailOut,
 )
-from app.services import fetch_all_portfolios, take_snapshot
+from app.services import fetch_all_portfolios, take_snapshot, get_latest_portfolio_snapshot
 
 router = APIRouter(prefix="/api")
 
@@ -39,7 +39,7 @@ def change_pin(body: PinChange):
 
 @router.get("/portfolio", dependencies=[Depends(verify_pin)])
 def get_portfolio(db: Session = Depends(get_db)):
-    return fetch_all_portfolios(db)
+    return get_latest_portfolio_snapshot(db)
 
 
 @router.post("/portfolio/snapshot", dependencies=[Depends(verify_pin)])

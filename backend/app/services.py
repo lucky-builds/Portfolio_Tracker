@@ -185,3 +185,52 @@ def take_snapshot(db: Session) -> Snapshot:
     db.commit()
     db.refresh(snapshot)
     return snapshot
+
+
+def get_latest_portfolio_snapshot(db: Session) -> dict:
+    """Retrieve the most recent snapshot from the database."""
+    latest = db.query(Snapshot).order_by(Snapshot.timestamp.desc()).first()
+    
+    # If there hasn't been a single fetch/cron yet, trigger a live fetch now to generate the first snapshot.
+    if not latest:
+        latest = take_snapshot(db)
+        
+    accounts = []
+    for detail in latest.details:
+        holdings = []
+        for h in detail.holdings_data:
+            holdings.append({
+                "id": h.id,
+                "symbol_or_name": h.symbol_or_name,
+                "qty_or_units": h.qty_or_units,
+                "avg_price_or_nav": h.avg_price_or_nav,
+                "current_price_or_nav": h.current_price_or_nav,
+                "invested": h.invested,
+                "current": h.current,
+                "pnl": h.pnl,
+                "pnl_pct": h.pnl_pct,
+            })
+            
+        accounts.append({
+            "account_id": detail.account_id or detail.id,
+            "account_name": detail.account_name,
+            "owner": "",  # Unused explicitly in dashboard summary
+            "broker": "",
+            "account_type": detail.account_type,
+            "invested": detail.invested,
+            "current": detail.current,
+            "pnl": detail.pnl,
+            "pnl_pct": detail.pnl_pct,
+            "holdings": holdings,
+        })
+        
+    return {
+        "timestamp": latest.timestamp.isoformat(),
+        "accounts": accounts,
+        "total": {
+            "invested": latest.total_invested,
+            "current": latest.total_current,
+            "pnl": latest.total_pnl,
+            "pnl_pct": latest.total_pnl_pct,
+        },
+    }
