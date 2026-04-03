@@ -1,0 +1,210 @@
+{
+  "Garima - Kite (Stocks)": {
+    "type": "stocks",
+    "holdings": [
+      {
+        "symbol": "INDHOTEL.NS",
+        "qty": 56,
+        "avg_price": 598.83
+      },
+      {
+        "symbol": "JUNIORBEES.NS",
+        "qty": 123,
+        "avg_price": 778.84
+      },
+      {
+        "symbol": "MID150BEES.NS",
+        "qty": 175,
+        "avg_price": 216.47
+      },
+      {
+        "symbol": "MISHTANN.NS",
+        "qty": 5,
+        "avg_price": 18.35
+      },
+      {
+        "symbol": "NIFTYBEES.NS",
+        "qty": 32,
+        "avg_price": 255.81
+      },
+      {
+        "symbol": "TATAPOWER.NS",
+        "qty": 74,
+        "avg_price": 431.55
+      },
+      {
+        "symbol": "TATASTEEL.NS",
+        "qty": 211,
+        "avg_price": 164.50
+      },
+      {
+        "symbol": "TITAN.NS",
+        "qty": 15,
+        "avg_price": 3689.55
+      },
+      {
+        "symbol": "TMCV.NS",
+        "qty": 30,
+        "avg_price": 316.99
+      },
+      {
+        "symbol": "TMPV.NS",
+        "qty": 30,
+        "avg_price": 700.62
+      },
+      {
+        "symbol": "VOLTAS.NS",
+        "qty": 28,
+        "avg_price": 1339.70
+      }
+    ]
+  },
+  "Lucky - Groww (Stocks)": {
+    "type": "stocks",
+    "holdings": [
+      {
+        "symbol": "GOLDBEES.NS",
+        "qty": 1349,
+        "avg_price": 133.58
+      }
+    ]
+  },
+  "Lucky - Groww (MF)": {
+    "type": "mf",
+    "holdings": [
+      {
+        "name": "Quant Mid Cap Fund Direct Growth",
+        "scheme_code": "120841",
+        "units": 565.211,
+        "avg_nav": 269.09
+      },
+      {
+        "name": "Quant Infrastructure Fund Direct Growth",
+        "scheme_code": "120833",
+        "units": 642.943,
+        "avg_nav": 46.66
+      },
+      {
+        "name": "Quant Small Cap Fund Direct Plan Growth",
+        "scheme_code": "120828",
+        "units": 418.905,
+        "avg_nav": 286.43
+      }
+    ]
+  },
+  "Lucky - Kite (Stocks)": {
+    "type": "stocks",
+    "holdings": [
+      {
+        "symbol": "ACE.NS",
+        "qty": 2,
+        "avg_price": 1278.75
+      },
+      {
+        "symbol": "BAJAJHIND.NS",
+        "qty": 520,
+        "avg_price": 27.44
+      },
+      {
+        "symbol": "BSE.NS",
+        "qty": 6,
+        "avg_price": 921.33
+      },
+      {
+        "symbol": "DEEPAKFERT.NS",
+        "qty": 7,
+        "avg_price": 1093.69
+      },
+      {
+        "symbol": "ETERNAL.NS",
+        "qty": 5,
+        "avg_price": 226.53
+      },
+      {
+        "symbol": "GESHIP.NS",
+        "qty": 3,
+        "avg_price": 1201.03
+      },
+      {
+        "symbol": "GODFRYPHLP.NS",
+        "qty": 6,
+        "avg_price": 2120.23
+      },
+      {
+        "symbol": "GREAVESCOT.NS",
+        "qty": 37,
+        "avg_price": 172.97
+      },
+      {
+        "symbol": "GVT&D.NS",
+        "qty": 3,
+        "avg_price": 1666.32
+      },
+      {
+        "symbol": "ICICIBANK.NS",
+        "qty": 4,
+        "avg_price": 1253.14
+      },
+      {
+        "symbol": "ICIL.NS",
+        "qty": 23,
+        "avg_price": 336.35
+      },
+      {
+        "symbol": "JINDALSAW.NS",
+        "qty": 27,
+        "avg_price": 314.36
+      },
+      {
+        "symbol": "KARURVYSYA.NS",
+        "qty": 69,
+        "avg_price": 183.99
+      },
+      {
+        "symbol": "NATIONALUM.NS",
+        "qty": 40,
+        "avg_price": 181.22
+      },
+      {
+        "symbol": "NUVAMA.NS",
+        "qty": 10,
+        "avg_price": 1282.23
+      },
+      {
+        "symbol": "ONESOURCE.NS",
+        "qty": 1,
+        "avg_price": 292.14
+      },
+      {
+        "symbol": "POLICYBZR.NS",
+        "qty": 3,
+        "avg_price": 1675.15
+      },
+      {
+        "symbol": "SHAKTIPUMP.NS",
+        "qty": 12,
+        "avg_price": 738.51
+      },
+      {
+        "symbol": "STAR.NS",
+        "qty": 9,
+        "avg_price": 864.45
+      },
+      {
+        "symbol": "SUDARSCHEM.NS",
+        "qty": 5,
+        "avg_price": 1020.00
+      },
+      {
+        "symbol": "TMCV.NS",
+        "qty": 11,
+        "avg_price": 273.29
+      },
+      {
+        "symbol": "TMPV.NS",
+        "qty": 11,
+        "avg_price": 604.04
+      }
+    ]
+  }
+}
