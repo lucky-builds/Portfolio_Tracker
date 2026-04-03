@@ -49,23 +49,32 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className="min-h-full flex flex-col bg-background text-foreground">
+      <body className="min-h-full flex flex-col bg-background text-foreground overflow-x-hidden antialiased">
         <AuthGuard>
-          <div className="flex-1 flex">
+          {/* Main Layout Container */}
+          <div className="flex-1 flex flex-col md:flex-row min-h-0">
+            {/* Nav Sidebar/Bottom Bar */}
             <BottomNav />
-            {/* Main content area */}
-            <main className="flex-1 md:ml-56">
-              {/* Mobile header */}
+
+            {/* Main Content Area */}
+            <main className="flex-1 min-w-0 md:pl-64 flex flex-col">
+              {/* Mobile Header (Sticky) */}
               <header className="md:hidden sticky top-0 z-40 bg-surface/80 backdrop-blur-sm border-b border-border px-4 py-3 flex items-center justify-between">
                 <h1 className="text-base font-semibold">Portfolio Tracker</h1>
                 <ThemeToggle />
               </header>
-              {/* Desktop theme toggle */}
+
+              {/* Desktop theme toggle (Fixed) */}
               <div className="hidden md:flex fixed top-4 right-4 z-50">
                 <ThemeToggle />
               </div>
-              <div className="p-4 md:p-6 max-w-5xl">
+
+              {/* Scrollable Children Container */}
+              <div className="flex-1 p-4 md:p-8 lg:p-12 max-w-6xl w-full mx-auto md:mx-0 overflow-x-hidden">
                 {children}
+
+                {/* Bottom spacer to account for mobile BottomNav */}
+                <div className="h-24 md:hidden" />
               </div>
             </main>
           </div>

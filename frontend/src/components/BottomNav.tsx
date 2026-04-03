@@ -41,9 +41,6 @@ export default function BottomNav() {
 
   return (
     <>
-      {/* Spacer for fixed bottom nav */}
-      <div className="h-16 md:hidden" />
-
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-surface border-t border-border md:hidden z-50">
         <div className="flex justify-around items-center h-16 max-w-lg mx-auto">
@@ -65,8 +62,8 @@ export default function BottomNav() {
         </div>
       </nav>
 
-      {/* Desktop sidebar */}
-      <nav className="hidden md:flex fixed left-0 top-0 bottom-0 w-56 bg-surface border-r border-border flex-col z-50">
+      {/* Desktop sidebar - Fixed on desktop, hidden on mobile */}
+      <nav className="hidden md:flex fixed left-0 top-0 bottom-0 w-64 bg-surface border-r border-border flex-col z-50">
         <div className="p-5 border-b border-border">
           <h1 className="text-base font-semibold tracking-tight">Portfolio Tracker</h1>
         </div>
