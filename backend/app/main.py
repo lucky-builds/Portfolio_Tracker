@@ -5,10 +5,20 @@ from app.config import FRONTEND_URL
 from app.database import engine, Base
 from app.routes import router
 
-# Create tables on startup
-Base.metadata.create_all(bind=engine)
+from fastapi import FastAPI
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="Portfolio Tracker API")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Create tables on startup without blocking the web process if DB is temporarily unreachable
+    try:
+        from app.database import engine, Base
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print(f"Warning: Could not create tables on startup - {e}")
+    yield
+
+app = FastAPI(title="Portfolio Tracker API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
