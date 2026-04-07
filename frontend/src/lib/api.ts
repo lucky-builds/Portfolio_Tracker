@@ -67,3 +67,28 @@ export const getSnapshot = (id: number) =>
 // Seed
 export const seedFromJson = () =>
   apiFetch("/api/seed", { method: "POST" });
+
+// Angel One import
+export async function importAngelOnePreview(file: File, password: string) {
+  const pin = getPin();
+  const form = new FormData();
+  form.append("file", file);
+  form.append("password", password);
+  const res = await fetch(`${API_URL}/api/import/angelone/preview`, {
+    method: "POST",
+    headers: { "x-auth-pin": pin },
+    body: form,
+  });
+  if (res.status === 401) {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("portfolio_pin");
+      window.location.href = "/login";
+    }
+    throw new Error("Unauthorized");
+  }
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: "Parse failed" }));
+    throw new Error(err.detail || "Parse failed");
+  }
+  return res.json();
+}

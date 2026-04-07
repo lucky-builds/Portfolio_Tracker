@@ -11,6 +11,7 @@ import {
   updateHolding,
   deleteHolding,
   seedFromJson,
+  importAngelOnePreview,
 } from "@/lib/api";
 
 type Account = {
@@ -61,6 +62,19 @@ export default function HoldingsPage() {
   const [editAvgPrice, setEditAvgPrice] = useState("");
   const [editUnits, setEditUnits] = useState("");
   const [editAvgNav, setEditAvgNav] = useState("");
+
+  // Angel One import
+  type EquityRow = { company_name: string; isin: string; qty: number; avg_price: number; symbol: string };
+  type MFRow = { fund_name: string; isin: string; units: number; avg_nav: number; scheme_code: string };
+  const [showAngelImport, setShowAngelImport] = useState(false);
+  const [angelFile, setAngelFile] = useState<File | null>(null);
+  const [angelPassword, setAngelPassword] = useState("");
+  const [angelParsing, setAngelParsing] = useState(false);
+  const [angelParseError, setAngelParseError] = useState("");
+  const [angelPreview, setAngelPreview] = useState<{ client_name: string; equity: EquityRow[]; mf: MFRow[] } | null>(null);
+  const [angelOwner, setAngelOwner] = useState("");
+  const [angelImporting, setAngelImporting] = useState(false);
+  const [angelImportError, setAngelImportError] = useState("");
 
   const fetchAccounts = async () => {
     try {
@@ -171,6 +185,75 @@ export default function HoldingsPage() {
     }
   };
 
+  const handleAngelParse = async () => {
+    if (!angelFile) return;
+    setAngelParsing(true);
+    setAngelParseError("");
+    setAngelPreview(null);
+    try {
+      const data = await importAngelOnePreview(angelFile, angelPassword);
+      // Build editable rows
+      const equity: EquityRow[] = (data.equity || []).map((r: Omit<EquityRow, "symbol">) => ({ ...r, symbol: "" }));
+      const mf: MFRow[] = (data.mf || []).map((r: { fund_name: string; isin: string; units: number; avg_nav: number; suggested_scheme_code?: string }) => ({
+        fund_name: r.fund_name,
+        isin: r.isin,
+        units: r.units,
+        avg_nav: r.avg_nav,
+        scheme_code: r.suggested_scheme_code || "",
+      }));
+      setAngelPreview({ client_name: data.client_name || "", equity, mf });
+      setAngelOwner(data.client_name ? data.client_name.split(" ")[0] : "");
+    } catch (e) {
+      setAngelParseError(e instanceof Error ? e.message : "Parse failed");
+    } finally {
+      setAngelParsing(false);
+    }
+  };
+
+  const handleAngelImport = async () => {
+    if (!angelPreview || !angelOwner) return;
+    setAngelImporting(true);
+    setAngelImportError("");
+    try {
+      const owner = angelOwner.trim();
+
+      if (angelPreview.equity.length > 0) {
+        const acc = await createAccount({ owner, broker: "Angel One", account_type: "stocks" });
+        for (const row of angelPreview.equity) {
+          if (!row.symbol.trim()) continue;
+          await addStockHolding(acc.id, {
+            symbol: row.symbol.trim().toUpperCase(),
+            qty: row.qty,
+            avg_price: row.avg_price,
+          });
+        }
+      }
+
+      if (angelPreview.mf.length > 0) {
+        const acc = await createAccount({ owner, broker: "Angel One", account_type: "mf" });
+        for (const row of angelPreview.mf) {
+          if (!row.scheme_code.trim()) continue;
+          await addMFHolding(acc.id, {
+            name: row.fund_name,
+            scheme_code: row.scheme_code.trim(),
+            units: row.units,
+            avg_nav: row.avg_nav,
+          });
+        }
+      }
+
+      setShowAngelImport(false);
+      setAngelPreview(null);
+      setAngelFile(null);
+      setAngelPassword("");
+      fetchAccounts();
+    } catch (e) {
+      setAngelImportError(e instanceof Error ? e.message : "Import failed");
+    } finally {
+      setAngelImporting(false);
+    }
+  };
+
   if (loading) {
     return <div className="flex items-center justify-center h-64 text-muted text-sm">Loading...</div>;
   }
@@ -186,6 +269,12 @@ export default function HoldingsPage() {
             </button>
           )}
           <button
+            onClick={() => { setShowAngelImport(!showAngelImport); setAngelPreview(null); setAngelParseError(""); }}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium bg-surface border border-border text-muted hover:text-foreground"
+          >
+            Import Angel One
+          </button>
+          <button
             onClick={() => setShowNewAccount(!showNewAccount)}
             className="px-3 py-1.5 rounded-lg text-xs font-medium bg-foreground text-background"
           >
@@ -193,6 +282,171 @@ export default function HoldingsPage() {
           </button>
         </div>
       </div>
+
+      {/* Angel One Import */}
+      {showAngelImport && (
+        <div className="bg-surface rounded-xl border border-border p-4 space-y-4">
+          <div className="text-sm font-medium">Import from Angel One</div>
+
+          {!angelPreview && (
+            <div className="space-y-3">
+              <div>
+                <label className="text-[10px] text-muted block mb-1">Holdings Report (.xlsx)</label>
+                <input
+                  type="file"
+                  accept=".xlsx"
+                  onChange={(e) => setAngelFile(e.target.files?.[0] || null)}
+                  className="text-sm text-muted file:mr-3 file:px-3 file:py-1 file:rounded file:border-0 file:text-xs file:bg-foreground file:text-background"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-muted block mb-1">Password (if protected)</label>
+                <input
+                  type="password"
+                  placeholder="Leave blank if none"
+                  value={angelPassword}
+                  onChange={(e) => setAngelPassword(e.target.value)}
+                  className="px-3 py-2 rounded-lg bg-background border border-border text-sm w-full"
+                />
+              </div>
+              {angelParseError && <p className="text-xs text-loss">{angelParseError}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAngelParse}
+                  disabled={!angelFile || angelParsing}
+                  className="px-4 py-2 rounded-lg text-xs font-medium bg-foreground text-background disabled:opacity-50"
+                >
+                  {angelParsing ? "Parsing…" : "Parse File"}
+                </button>
+                <button onClick={() => setShowAngelImport(false)} className="px-4 py-2 rounded-lg text-xs font-medium text-muted">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {angelPreview && (
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] text-muted block mb-1">Owner Name</label>
+                <input
+                  value={angelOwner}
+                  onChange={(e) => setAngelOwner(e.target.value)}
+                  placeholder="e.g. Lucky"
+                  className="px-3 py-2 rounded-lg bg-background border border-border text-sm w-48"
+                />
+              </div>
+
+              {/* Equity Preview */}
+              {angelPreview.equity.length > 0 && (
+                <div>
+                  <div className="text-xs font-medium text-muted mb-2">Equity — {angelPreview.equity.length} holdings</div>
+                  <div className="text-[10px] text-muted mb-2">Fill in the NSE ticker symbol for each stock (e.g. VOLTAS, BHARTIARTL)</div>
+                  <div className="rounded-lg border border-border overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-border bg-background">
+                          <th className="px-3 py-2 text-left font-medium text-muted">Company</th>
+                          <th className="px-3 py-2 text-right font-medium text-muted">Qty</th>
+                          <th className="px-3 py-2 text-right font-medium text-muted">Avg Price</th>
+                          <th className="px-3 py-2 text-left font-medium text-muted">NSE Symbol</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {angelPreview.equity.map((row, i) => (
+                          <tr key={i} className="border-b border-border last:border-b-0">
+                            <td className="px-3 py-2 text-foreground">{row.company_name}</td>
+                            <td className="px-3 py-2 text-right">{row.qty}</td>
+                            <td className="px-3 py-2 text-right">₹{row.avg_price.toFixed(2)}</td>
+                            <td className="px-3 py-2">
+                              <input
+                                value={row.symbol}
+                                onChange={(e) => {
+                                  const updated = [...angelPreview.equity];
+                                  updated[i] = { ...updated[i], symbol: e.target.value };
+                                  setAngelPreview({ ...angelPreview, equity: updated });
+                                }}
+                                placeholder="e.g. VOLTAS"
+                                className="px-2 py-1 rounded bg-background border border-border text-xs w-28 uppercase"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* MF Preview */}
+              {angelPreview.mf.length > 0 && (
+                <div>
+                  <div className="text-xs font-medium text-muted mb-2">Mutual Funds — {angelPreview.mf.length} holdings</div>
+                  <div className="text-[10px] text-muted mb-2">Scheme codes are auto-filled from mfapi.in — verify before importing</div>
+                  <div className="rounded-lg border border-border overflow-hidden">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="border-b border-border bg-background">
+                          <th className="px-3 py-2 text-left font-medium text-muted">Fund</th>
+                          <th className="px-3 py-2 text-right font-medium text-muted">Units</th>
+                          <th className="px-3 py-2 text-right font-medium text-muted">Avg NAV</th>
+                          <th className="px-3 py-2 text-left font-medium text-muted">Scheme Code</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {angelPreview.mf.map((row, i) => (
+                          <tr key={i} className="border-b border-border last:border-b-0">
+                            <td className="px-3 py-2 text-foreground">{row.fund_name}</td>
+                            <td className="px-3 py-2 text-right">{row.units.toFixed(3)}</td>
+                            <td className="px-3 py-2 text-right">₹{row.avg_nav.toFixed(4)}</td>
+                            <td className="px-3 py-2">
+                              <input
+                                value={row.scheme_code}
+                                onChange={(e) => {
+                                  const updated = [...angelPreview.mf];
+                                  updated[i] = { ...updated[i], scheme_code: e.target.value };
+                                  setAngelPreview({ ...angelPreview, mf: updated });
+                                }}
+                                placeholder="e.g. 120503"
+                                className="px-2 py-1 rounded bg-background border border-border text-xs w-24"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {angelPreview.equity.length === 0 && angelPreview.mf.length === 0 && (
+                <p className="text-xs text-muted">No holdings found in the file.</p>
+              )}
+
+              {angelImportError && <p className="text-xs text-loss">{angelImportError}</p>}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAngelImport}
+                  disabled={angelImporting || !angelOwner.trim()}
+                  className="px-4 py-2 rounded-lg text-xs font-medium bg-foreground text-background disabled:opacity-50"
+                >
+                  {angelImporting ? "Importing…" : "Import All"}
+                </button>
+                <button
+                  onClick={() => { setAngelPreview(null); setAngelParseError(""); }}
+                  className="px-4 py-2 rounded-lg text-xs font-medium text-muted"
+                >
+                  Back
+                </button>
+                <button onClick={() => setShowAngelImport(false)} className="px-4 py-2 rounded-lg text-xs font-medium text-muted">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* New Account Form */}
       {showNewAccount && (
