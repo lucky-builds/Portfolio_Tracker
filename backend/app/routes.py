@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
 from sqlalchemy.orm import Session
 from typing import Optional
 
@@ -193,6 +193,24 @@ def get_snapshot(snapshot_id: int, db: Session = Depends(get_db)):
             for d in details
         ],
     }
+
+
+# ── Angel One Import ────────────────────────────────────────────────────────
+
+@router.post("/import/angelone/preview", dependencies=[Depends(verify_pin)])
+async def import_angelone_preview(
+    file: UploadFile = File(...),
+    password: str = Form(""),
+):
+    """Parse an Angel One holdings XLSX and return preview data (equity + MF)."""
+    from app.parsers.angelone import parse_angelone_xlsx, AngelOneParseError
+
+    file_bytes = await file.read()
+    try:
+        data = parse_angelone_xlsx(file_bytes, password=password or None)
+    except AngelOneParseError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return data
 
 
 # ── Seed from holdings.json ─────────────────────────────────────────────────
